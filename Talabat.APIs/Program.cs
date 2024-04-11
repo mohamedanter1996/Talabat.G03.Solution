@@ -1,4 +1,6 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileSystemGlobbing.Internal.Patterns;
+using Talabat.Repository.Data;
 
 namespace Talabat.APIs
 {
@@ -16,6 +18,8 @@ namespace Talabat.APIs
 			// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 			WebApplicationBuilder.Services.AddEndpointsApiExplorer();
 			WebApplicationBuilder.Services.AddSwaggerGen();
+
+			WebApplicationBuilder.Services.AddDbContext<StoreContext>(options => { options.UseSqlServer(WebApplicationBuilder.Configuration.GetConnectionString("DefaultConnection")); }); ;	
 			#endregion
 
 
