@@ -7,9 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Talabat.APIs", "Talabat.API
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Talabat.Core", "Talabat.Core\Talabat.Core.csproj", "{380E1A8F-D0FD-44ED-A156-6C5342600C3F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Talabat.Repository", "Talabat.Repository\Talabat.Repository.csproj", "{26326498-4518-44A4-9525-A0075D46D42E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Talabat.infrastructure", "Talabat.Repository\Talabat.infrastructure.csproj", "{26326498-4518-44A4-9525-A0075D46D42E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Talabat.Service", "Talabat.Service\Talabat.Service.csproj", "{2E9C99CD-14F4-4795-94B0-241509A59EEA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Talabat.Application", "Talabat.Service\Talabat.Application.csproj", "{2E9C99CD-14F4-4795-94B0-241509A59EEA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
