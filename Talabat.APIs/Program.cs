@@ -2,12 +2,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Talabat.APIs.Errors;
+using Talabat.APIs.Extentions;
 using Talabat.APIs.Helpers;
 using Talabat.APIs.Middlewares;
 using Talabat.Core.Entities;
 using Talabat.Core.Repositories.Contract;
-using Talabat.Repository;
-using Talabat.Repository.Data;
+using Talabat.infrastructure;
+using Talabat.infrastructure.Data;
 
 namespace Talabat.APIs
 {
@@ -28,36 +29,41 @@ namespace Talabat.APIs
 			WebApplicationBuilder.Services.AddControllers();
 			// Register Required Web APIs Services to the DI Container
 			// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-			WebApplicationBuilder.Services.AddEndpointsApiExplorer();
-			WebApplicationBuilder.Services.AddSwaggerGen();
+
+			//WebApplicationBuilder.Services.AddEndpointsApiExplorer();
+			//WebApplicationBuilder.Services.AddSwaggerGen();
+			WebApplicationBuilder.Services.AddSwaggerServices();
 
 			WebApplicationBuilder.Services.AddDbContext<StoreContext>(options => { options.UseSqlServer(WebApplicationBuilder.Configuration.GetConnectionString("DefaultConnection")); });
 
+
+			//ApplicationServicesExtentions.AddApplicationServices(builder.Services);
+			WebApplicationBuilder.Services.AddApplicationServices();
 			///WebApplicationBuilder.Services.AddScoped<IGenericRepository<Product>, GenericRepository<Product>>();
 
 			///WebApplicationBuilder.Services.AddScoped<IGenericRepository<ProductBrand>, GenericRepository<ProductBrand>>();
 
 			///WebApplicationBuilder.Services.AddScoped<IGenericRepository<ProductCategory>, GenericRepository<ProductCategory>>();
 
-			WebApplicationBuilder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+			//WebApplicationBuilder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 			//builder.Services.AddAutoMapper(M => M.AddProfile( new MappingProfiles()));
-			WebApplicationBuilder.Services.AddAutoMapper(typeof(MappingProfiles));
+			//WebApplicationBuilder.Services.AddAutoMapper(typeof(MappingProfiles));
 
-			WebApplicationBuilder.Services.Configure<ApiBehaviorOptions>(options =>
-			{
-				options.InvalidModelStateResponseFactory = (ActionContext) =>
-				{
-					var errors = ActionContext.ModelState.Where(p => p.Value.Errors.Count() > 0)
-														 .SelectMany(p => p.Value.Errors)
-														 .Select(e => e.ErrorMessage)
-														 .ToArray();
-					var response = new ApiValidationErrorResponse()
-					{
-						Errors = errors
-					};
-					return new BadRequestObjectResult(response);
-				};
-			});
+			//WebApplicationBuilder.Services.Configure<ApiBehaviorOptions>(options =>
+			//{
+			//	options.InvalidModelStateResponseFactory = (ActionContext) =>
+			//	{
+			//		var errors = ActionContext.ModelState.Where(p => p.Value.Errors.Count() > 0)
+			//											 .SelectMany(p => p.Value.Errors)
+			//											 .Select(e => e.ErrorMessage)
+			//											 .ToArray();
+			//		var response = new ApiValidationErrorResponse()
+			//		{
+			//			Errors = errors
+			//		};
+			//		return new BadRequestObjectResult(response);
+			//	};
+			//});
 			#endregion
 
 
@@ -92,11 +98,12 @@ namespace Talabat.APIs
 			app.UseMiddleware<ExceptionsMiddleware>();
 			if (app.Environment.IsDevelopment())
 			{
-				app.UseSwagger();
-				app.UseSwaggerUI();
+				//app.UseSwagger();
+				//app.UseSwaggerUI();
+				app.UseSwaggerMiddlewares();
 			}
 
-            app.UseStatusCodePagesWithReExecute("/errors/{0}");
+			app.UseStatusCodePagesWithReExecute("/errors/{0}");
 
 			app.UseHttpsRedirection();
 			app.UseStaticFiles();
