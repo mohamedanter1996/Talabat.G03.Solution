@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Talabat.APIs.Dtos;
 using Talabat.Core.Entities;
 using Talabat.Core.Repositories.Contract;
 using Talabat.Core.Specifications.Product_Specs;
@@ -9,8 +11,8 @@ namespace Talabat.APIs.Controllers
 	public class ProductsController : BaseApiController
 	{
 		private readonly IGenericRepository<Product> _productRepo;
-
-		public ProductsController(IGenericRepository<Product> ProductRepo)
+		private readonly IMapper _mapper;
+		public ProductsController(IGenericRepository<Product> ProductRepo, IMapper mapper)
 		{
 			_productRepo = ProductRepo;
 		}
