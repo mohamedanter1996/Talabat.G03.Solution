@@ -75,8 +75,10 @@ namespace Talabat.APIs
 				app.UseSwaggerUI();
 			}
 
-			app.UseHttpsRedirection();
 
+
+			app.UseHttpsRedirection();
+			app.UseStaticFiles();
 			app.UseRouting();
 			//app.UseEndpoints(endpoints => { endpoints.MapControllerRoute(name: "defult", pattern: "{controller}/{action}/{id?}");endpoints.MapControllers(); });
 

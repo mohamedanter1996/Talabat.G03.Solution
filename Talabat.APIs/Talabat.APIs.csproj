@@ -19,4 +19,8 @@
     <ProjectReference Include="..\Talabat.Repository\Talabat.infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\images\products\" />
+  </ItemGroup>
+
 </Project>
