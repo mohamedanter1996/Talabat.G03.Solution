@@ -7,8 +7,8 @@ using Talabat.APIs.Helpers;
 using Talabat.APIs.Middlewares;
 using Talabat.Core.Entities;
 using Talabat.Core.Repositories.Contract;
-using Talabat.infrastructure;
-using Talabat.infrastructure.Data;
+using Talabat.Repository;
+using Talabat.Repository.Data;
 
 namespace Talabat.APIs
 {

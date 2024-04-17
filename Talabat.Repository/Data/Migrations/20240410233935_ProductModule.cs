@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace Talabat.infrastructure.Data.Migrations
+namespace Talabat.Repository.Data.Migrations
 {
     public partial class ProductModule : Migration
     {

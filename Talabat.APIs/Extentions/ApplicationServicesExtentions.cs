@@ -3,7 +3,7 @@ using Talabat.APIs.Errors;
 using Talabat.APIs.Helpers;
 using Talabat.Core.Repositories;
 using Talabat.Core.Repositories.Contract;
-using Talabat.infrastructure;
+using Talabat.Repository;
 
 namespace Talabat.APIs.Extentions
 {

@@ -19,12 +19,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\Talabat.Core\Talabat.Core.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Reference Include="Talabat.infrastructure">
-	    <HintPath>..\Talabat.infrastructure\obj\Debug\net7.0\Talabat.infrastructure.dll</HintPath>
-	  </Reference>
+	  <ProjectReference Include="..\Talabat.Repository\Talabat.Repository.csproj" />
 	</ItemGroup>
 
 </Project>

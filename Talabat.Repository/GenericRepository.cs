@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 using Talabat.Core.Entities;
 using Talabat.Core.Repositories.Contract;
 using Talabat.Core.Specifications;
-using Talabat.infrastructure;
-using Talabat.infrastructure.Data;
+using Talabat.Repository;
+using Talabat.Repository.Data;
 
-namespace Talabat.infrastructure
+namespace Talabat.Repository
 {
 	public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
 	{
