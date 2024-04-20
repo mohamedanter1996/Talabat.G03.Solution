@@ -16,18 +16,20 @@ namespace Talabat.APIs.Controllers
 		public ProductsController(IGenericRepository<Product> ProductRepo, IMapper mapper)
 		{
 			_productRepo = ProductRepo;
+			_mapper = mapper;
 		}
 
 		// api/Products
 
 		[HttpGet]
 
-		public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
+		public async Task<ActionResult<IEnumerable<ProductToReturnDto>>> GetProducts()
 		{
+
 			//var products = await _productRepo.GetAllAsync();
 			var Spec = new ProductWithBrandAndCategorySpecifications();
-			var products = await _productRepo.GetByIdWithSpecAsync(Spec);
-			return Ok(products);
+			var products = await _productRepo.GetAllWithSpecAsync(Spec);
+			return Ok(_mapper.Map<IEnumerable<Product>,IEnumerable<ProductToReturnDto>>(products));
 		}
 
 		// api/Products/1
