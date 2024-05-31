@@ -25,6 +25,21 @@ namespace Talabat.infrastructure
 
 
 			}
+
+			if (spec.OrderBy is not null) //P=>P.Name
+			{
+				query = query.OrderBy(spec.OrderBy);
+			}
+
+			else if (spec.OrderByDesc is not null) //P=>P.Price
+			{
+				query = query.OrderByDescending(spec.OrderByDesc);
+			}
+
+			if(spec.IsPaginationEnabled==true)
+			{
+				query=query.Skip(spec.Skip).Take(spec.Take);
+			}
 			query = spec.Includes.Aggregate(query, (currentQuery, includeExpression) => currentQuery.Include(includeExpression));
 
 			return query;

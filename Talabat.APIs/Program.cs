@@ -1,9 +1,27 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileSystemGlobbing.Internal.Patterns;
+using Microsoft.IdentityModel.Tokens;
+using StackExchange.Redis;
+using System.Net;
+using System.Reflection.Metadata.Ecma335;
+using System.Text;
+using System.Text.Json;
+using Talabat.APIs.Errors;
+using Talabat.APIs.Extensions;
+using Talabat.APIs.Helpers;
+using Talabat.APIs.Middlewares;
 using Talabat.Core.Entities;
 using Talabat.Core.Repositories.Contract;
+using Talabat.Core.Service.Contract;
 using Talabat.Repository;
+using Talabat.Repository._Identity;
 using Talabat.Repository.Data;
+using Talabat.Service.AuthService;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace Talabat.APIs
 {
@@ -14,7 +32,7 @@ namespace Talabat.APIs
 
 			//StoreContext dbContext = new StoreContext();
 
-		//await dbContext.Database.MigrateAsync(); // Update Database
+			//await dbContext.Database.MigrateAsync(); // Update Database
 
 			var WebApplicationBuilder = WebApplication.CreateBuilder(args);
 
@@ -23,58 +41,99 @@ namespace Talabat.APIs
 
 			WebApplicationBuilder.Services.AddControllers();
 			// Register Required Web APIs Services to the DI Container
-			// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-			WebApplicationBuilder.Services.AddEndpointsApiExplorer();
-			WebApplicationBuilder.Services.AddSwaggerGen();
+		    
+			WebApplicationBuilder.Services.AddSwaggerServices();
 
+			WebApplicationBuilder.Services.AddApplicationServices();
 			WebApplicationBuilder.Services.AddDbContext<StoreContext>(options => { options.UseSqlServer(WebApplicationBuilder.Configuration.GetConnectionString("DefaultConnection")); });
 
-			///WebApplicationBuilder.Services.AddScoped<IGenericRepository<Product>, GenericRepository<Product>>();
+			WebApplicationBuilder.Services.AddDbContext<ApplicationIdentityDbContext>(options => { options.UseSqlServer(WebApplicationBuilder.Configuration.GetConnectionString("IdentityConnection")); });
+			WebApplicationBuilder.Services.AddSingleton<IConnectionMultiplexer>((ServiseProvider) => {
+				var connection = WebApplicationBuilder.Configuration.GetConnectionString("Redis");
+				return ConnectionMultiplexer.Connect(connection); }
+			);
 
-			///WebApplicationBuilder.Services.AddScoped<IGenericRepository<ProductBrand>, GenericRepository<ProductBrand>>();
+			WebApplicationBuilder.Services.AddAuthServices(WebApplicationBuilder.Configuration);
 
-			///WebApplicationBuilder.Services.AddScoped<IGenericRepository<ProductCategory>, GenericRepository<ProductCategory>>();
-
-			WebApplicationBuilder.Services.AddScoped(typeof(IGenericRepository<>),typeof(GenericRepository<>) );
+			WebApplicationBuilder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationIdentityDbContext>();
+			
 			#endregion
 
 
 			var app = WebApplicationBuilder.Build();
 
+			#region Apply All Pending Migrations [Update-Database] and Data Seeding
 			using var scope = app.Services.CreateScope();
 
 			var services = scope.ServiceProvider;
 
 			var _dbContext = services.GetRequiredService<StoreContext>();
 
+			var _IdentityDbContext = services.GetRequiredService<ApplicationIdentityDbContext>();
 
-			var loggerFactory =services.GetRequiredService<ILoggerFactory>();
+			var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+			var logger = loggerFactory.CreateLogger<Program>();
+
 
 			try
 			{
 				await _dbContext.Database.MigrateAsync(); //Update-Database
-
+				await _IdentityDbContext.Database.MigrateAsync();
 				await StoreContextSeed.SeedAsync(_dbContext); //Data Seeding
+				var _userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+				await ApplicationIdentityContextSeed.SeedUserAsync(_userManager);
 			}
 			catch (Exception ex)
 			{
 
 				Console.WriteLine(ex);
 
-				var logger = loggerFactory.CreateLogger<Program>();
 				logger.LogError(ex, "an error has been occured during apply the migration");
-			}
+			} 
+			#endregion
 			#region Configure Kestrel Middlewares
 			// Configure the HTTP request pipeline.
+			//	app.UseMiddleware<ExceptionMiddleware>();
+
+		app.Use(async (httpContext, _next) =>
+		{
+			try
+			{
+		
+				// Take an Action With the Request
+				await _next.Invoke(httpContext); // Go To the next Middleware
+												 // Take an Action with The Response
+			}
+			catch (Exception ex)
+			{
+		
+				logger.LogError(ex.Message);// Development Env
+											 // Log Exception in (Database | Files) // Production Env
+		
+				httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+				httpContext.Response.ContentType = "application/json";
+			
+				var response = app.Environment.IsDevelopment() ? new ApiExceptionResponse((int)HttpStatusCode.InternalServerError, ex.Message, ex.StackTrace.ToString()) : new ApiExceptionResponse((int)HttpStatusCode.InternalServerError);
+				var options = new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+				var json = JsonSerializer.Serialize(response, options);
+			
+				httpContext.Response.WriteAsync(json);
+			}
+		});
+
 			if (app.Environment.IsDevelopment())
 			{
-				app.UseSwagger();
-				app.UseSwaggerUI();
+				app.UseSwaggerMiddlewares();
 			}
-
+			app.UseStatusCodePagesWithReExecute("/errors/{0}");
 			app.UseHttpsRedirection();
 
+			app.UseStaticFiles();
+
+
 			app.UseRouting();
+	
+			app.UseAuthorization();
 			//app.UseEndpoints(endpoints => { endpoints.MapControllerRoute(name: "defult", pattern: "{controller}/{action}/{id?}");endpoints.MapControllers(); });
 
 			app.MapControllers();
