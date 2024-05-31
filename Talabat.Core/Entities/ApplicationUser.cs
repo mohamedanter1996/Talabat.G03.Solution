@@ -12,6 +12,6 @@ namespace Talabat.Core.Entities
 	{
 		public string DisplayName { get; set; } = null!;
 
-		public Address? Address { get; set; } = null!; // Navigation Propert [ONE]
+		public Talabat.Core.Entities.Address? Address { get; set; } = null!; // Navigation Propert [ONE]
 	}
 }

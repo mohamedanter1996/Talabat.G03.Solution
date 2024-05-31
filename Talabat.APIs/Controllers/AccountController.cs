@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -7,6 +8,7 @@ using Microsoft.Win32;
 using System.Security.Claims;
 using Talabat.APIs.Dtos;
 using Talabat.APIs.Errors;
+using Talabat.APIs.Extensions;
 using Talabat.Core.Entities;
 using Talabat.Core.Service.Contract;
 
@@ -18,13 +20,14 @@ namespace Talabat.APIs.Controllers
 		private readonly UserManager<ApplicationUser> _userManager;
 		private readonly SignInManager<ApplicationUser> _signInManager;
 		private readonly IAuthService _authService;
-		
+		private readonly IMapper _mapper;
 
-		public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IAuthService authService)
+		public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IAuthService authService,IMapper mapper)
 		{
 			_userManager = userManager;
 			_signInManager = signInManager;
 			_authService = authService;
+			_mapper = mapper;
 		}
 		[HttpPost("login")] // POST : /api/Account/login
 
@@ -73,22 +76,51 @@ namespace Talabat.APIs.Controllers
 
 		}
 
-		[Authorize(AuthenticationSchemes =JwtBearerDefaults.AuthenticationScheme)]
+		[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 		[HttpGet]  // Get: /api/Account
 		public async Task<ActionResult<UserDto>> GetCurrentUser()
 		{
-			var email=User.FindFirstValue(ClaimTypes.Email)?? string.Empty;
-		
+			var email = User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+
 			var user = await _userManager.FindByEmailAsync(email);
-		
-		
-		
+
+
+
 			return Ok(new UserDto()
-			{ 
-				DisplayName = user?.DisplayName??string.Empty,
-				Email=user?.Email ?? string.Empty,
-				Token= await _authService.CreateTokenAsync(user,_userManager)
+			{
+				DisplayName = user?.DisplayName ?? string.Empty,
+				Email = user?.Email ?? string.Empty,
+				Token = await _authService.CreateTokenAsync(user, _userManager)
 			});
+		}
+
+
+		[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+		[HttpGet("address")] //GEt:/api/Account/address
+		public async Task<ActionResult<AddressDto>> GetUserAddress()
+		{
+			
+			var user = await _userManager.FindWithAddressAsync(User);
+
+			return Ok(_mapper.Map<AddressDto>(user.Address));
+		}
+
+		[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+		[HttpPut("address")] //Put:/api/Account/address
+
+		public async Task<ActionResult<Talabat.Core.Entities.Address>> UpdateUserAddress(AddressDto address)
+		{
+			var updatedAddress=_mapper.Map<Talabat.Core.Entities.Address>(address);
+
+			var user = await _userManager.FindWithAddressAsync(User);
+
+			updatedAddress.Id = user.Address.Id;
+
+			user.Address = updatedAddress;
+
+			var result = await _userManager.UpdateAsync(user);
+			if (!result.Succeeded) { return BadRequest(new ApivalidationErrorResponse() { Errors = result.Errors.Select(E => E.Description) }); }
+			return Ok(address);
 		}
 	}
 }

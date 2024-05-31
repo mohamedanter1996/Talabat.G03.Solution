@@ -1,4 +1,6 @@
-﻿namespace Talabat.Core.Entities
+﻿using System.Text.Json.Serialization;
+
+namespace Talabat.Core.Entities
 {
 	public class Address : BaseEntity
 	{
@@ -13,7 +15,10 @@
 
 		public string Country { get; set; } = null!;
 
+		[JsonIgnore]
 		public string ApplicationUserId { get; set; } // Foreign Key
+
+		[JsonIgnore]
 		public ApplicationUser User { get; set; } = null!;  // Navigation Propert [ONE]
 
 	}

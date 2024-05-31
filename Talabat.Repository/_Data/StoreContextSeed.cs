@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Talabat.Core.Entities;
+using Talabat.Core.Entities.Order_Aggregate;
 
 namespace Talabat.Repository.Data
 {
@@ -52,6 +53,21 @@ namespace Talabat.Repository.Data
 					foreach (var Product in Products)
 					{
 						_dbContext.Set<Product>().Add(Product);
+					}
+					await _dbContext.SaveChangesAsync();
+				}
+			}
+
+			if (_dbContext.DeliveryMethods.Count() == 0)
+			{
+				var DeliveryMethodsData = File.ReadAllText("../Talabat.Repository/_Data/DataSeed/delivery.json");
+				var DeliveryMethods = JsonSerializer.Deserialize<List<DeliveryMethod>>(DeliveryMethodsData);
+				//categories=categories?.Select(b=>new ProductCategory() { Name=b.Name}).ToList();
+				if (DeliveryMethods?.Count() > 0)
+				{
+					foreach (var DeliveryMethod in DeliveryMethods)
+					{
+						_dbContext.Set<DeliveryMethod>().Add(DeliveryMethod);
 					}
 					await _dbContext.SaveChangesAsync();
 				}

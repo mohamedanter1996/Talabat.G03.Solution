@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileSystemGlobbing.Internal.Patterns;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using StackExchange.Redis;
 using System.Net;
 using System.Reflection.Metadata.Ecma335;
@@ -39,7 +40,10 @@ namespace Talabat.APIs
 			#region Configure Services
 			// Add services to the DI container.
 
-			WebApplicationBuilder.Services.AddControllers();
+			WebApplicationBuilder.Services.AddControllers().AddNewtonsoftJson(options =>
+			{
+				options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+			});
 			// Register Required Web APIs Services to the DI Container
 		    
 			WebApplicationBuilder.Services.AddSwaggerServices();
@@ -115,7 +119,7 @@ namespace Talabat.APIs
 			
 				var response = app.Environment.IsDevelopment() ? new ApiExceptionResponse((int)HttpStatusCode.InternalServerError, ex.Message, ex.StackTrace.ToString()) : new ApiExceptionResponse((int)HttpStatusCode.InternalServerError);
 				var options = new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-				var json = JsonSerializer.Serialize(response, options);
+				var json = System.Text.Json.JsonSerializer.Serialize(response, options);
 			
 				httpContext.Response.WriteAsync(json);
 			}
