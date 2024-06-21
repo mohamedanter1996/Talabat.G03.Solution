@@ -8,6 +8,7 @@ using Talabat.APIs.Errors;
 using Talabat.APIs.Helpers;
 using Talabat.Core.Entities;
 using Talabat.Core.Repositories.Contract;
+using Talabat.Core.Service.Contract;
 using Talabat.Core.Specifications;
 using Talabat.Core.Specifications.Product_Specs;
 
@@ -16,30 +17,32 @@ namespace Talabat.APIs.Controllers
 
 	public class ProductsController : BaseApiController
 	{
-		private readonly IGenericRepository<Product> _productRepo;
-		private readonly IGenericRepository<ProductBrand> _brandsRepo;
-		private readonly IGenericRepository<ProductCategory> _categoriesRepo;
+		//private readonly IGenericRepository<Product> _productRepo;
+		//private readonly IGenericRepository<ProductBrand> _brandsRepo;
+		//private readonly IGenericRepository<ProductCategory> _categoriesRepo;
+		private readonly IProductService _productService;
 		private readonly IMapper _mapper;
 
-		public ProductsController(IGenericRepository<Product> ProductRepo, IGenericRepository<ProductBrand> brandsRepo, IGenericRepository<ProductCategory> categoriesRepo, IMapper mapper)
+		public ProductsController(IProductService productService/*IGenericRepository<Product> ProductRepo, IGenericRepository<ProductBrand> brandsRepo, IGenericRepository<ProductCategory> categoriesRepo*/, IMapper mapper)
 		{
-			_productRepo = ProductRepo;
-			_brandsRepo = brandsRepo;
-			_categoriesRepo = categoriesRepo;
+			//_productRepo = ProductRepo;
+			//_brandsRepo = brandsRepo;
+			//_categoriesRepo = categoriesRepo;
+			_productService = productService;
 			_mapper = mapper;
 		}
 
 
-		[Authorize(AuthenticationSchemes =JwtBearerDefaults.AuthenticationScheme)]
+		[CachedAttribute(600)]
 		[HttpGet]// api/Products
 
 		public async Task<ActionResult<Pagination<ProductToReturnDto>>> GetProducts([FromQuery]ProductSpecParams specParams)
 		{
-			var Spec = new ProductWithBrandAndCategorySpecifications(specParams);
-			var products = await _productRepo.GetAllWithSpecAsync(Spec);
+			
+			var products = await _productService.GetProductsAsync(specParams);
 			var data = _mapper.Map<IReadOnlyList<Product>, IReadOnlyList<ProductToReturnDto>>(products);
-			var CountSpec = new ProductsWithFilterationForCountSpecifications(specParams);
-			var Count =await _productRepo.GetCountAsync(CountSpec);
+		
+			var Count =await _productService.GetCountAsync(specParams);
 			return Ok(new Pagination<ProductToReturnDto>(specParams.PageIndex,specParams.PageSize,data,Count));
 		}
 
@@ -47,13 +50,13 @@ namespace Talabat.APIs.Controllers
 		[ProducesResponseType(typeof(ProductToReturnDto), StatusCodes.Status200OK)]
 		[ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
 
+		[CachedAttribute(600)]
 		[HttpGet("{id}")]
 
 		public async Task<ActionResult<ProductToReturnDto>> GetProduct(int id)
-
 		{
-			var Spec = new ProductWithBrandAndCategorySpecifications(id);
-			var product = await _productRepo.GetWithSpecAsync(Spec);
+			
+			var product = await _productService.GetProductAsync(id);
 
 			if (product is null)
 			{
@@ -63,20 +66,22 @@ namespace Talabat.APIs.Controllers
 			return Ok(_mapper.Map<Product, ProductToReturnDto>(product)); //200
 		}
 
+		[CachedAttribute(600)]
 		[HttpGet("brands")]    //api/products/brands
 
 		public async Task<ActionResult<IReadOnlyList<ProductBrand>>> GetBrands()
 		{
-			var brands=await _brandsRepo.GetAllAsync();
+			var brands=await _productService.GetBrandsAsync();
 
 			return Ok(brands);
 		}
 
+		[CachedAttribute(600)]
 		[HttpGet("categories")] //api/products/categories
 
 		public async Task<ActionResult<IReadOnlyList<ProductCategory>>> GetCategories()
 		{
-			var categories=await _categoriesRepo.GetAllAsync(); return Ok(categories);
+			var categories=await _productService.GetCategoriesAsync(); return Ok(categories);
 		}
 	}
 

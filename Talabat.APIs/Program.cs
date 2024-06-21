@@ -60,7 +60,15 @@ namespace Talabat.APIs
 			WebApplicationBuilder.Services.AddAuthServices(WebApplicationBuilder.Configuration);
 
 			WebApplicationBuilder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationIdentityDbContext>();
-			
+
+			WebApplicationBuilder.Services.AddCors(options =>
+			{
+				options.AddPolicy("myPolicy", policyOptions =>
+				{
+					policyOptions.AllowAnyHeader().AllowAnyMethod().WithOrigins(WebApplicationBuilder.Configuration["FrontBaseUrl"]);
+				});
+			});
+
 			#endregion
 
 
@@ -139,7 +147,7 @@ namespace Talabat.APIs
 	
 			app.UseAuthorization();
 			//app.UseEndpoints(endpoints => { endpoints.MapControllerRoute(name: "defult", pattern: "{controller}/{action}/{id?}");endpoints.MapControllers(); });
-
+			app.UseCors("myPolicy");
 			app.MapControllers();
 			#endregion
 

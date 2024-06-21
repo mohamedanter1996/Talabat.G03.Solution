@@ -29,7 +29,7 @@ namespace Talabat.Repository
 			return await _dbContext.Set<T>().ToListAsync();
 		}
 
-		public async Task<T?> GetAsync(int id)
+		public async Task<T?> GetByIdAsync(int id)
 		{
 
 			//if (typeof(T) == typeof(Product))
